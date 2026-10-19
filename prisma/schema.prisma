@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+enum PrintJobStatus {
+  PENDING
+  PROCESSING
+  PRINTED
+  FAILED
+}
+
+enum PrintJobTrigger {
+  NEW_ORDER
+  REPRINT
+}
+
+model Category {
+  id                 String     @id @default(cuid())
+  name               String
+  slug               String     @unique
+  description        String?
+  sortOrder          Int        @default(0)
+  isActive           Boolean    @default(true)
+  manualOrderingOpen Boolean    @default(true)
+  availableFromHour  Int?
+  availableUntilHour Int?
+  weeklyHoursJson    String?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  items              MenuItem[]
+}
+
+model MenuItem {
+  id                 String          @id @default(cuid())
+  categoryId         String
+  name               String
+  slug               String          @unique
+  description        String?
+  priceCents         Int
+  imageUrl           String?
+  isAvailable        Boolean         @default(true)
+  manualOrderingOpen Boolean         @default(true)
+  sortOrder          Int             @default(0)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  category           Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  modifierGroups     ModifierGroup[]
+  orderItems         OrderItem[]
+
+  @@index([categoryId])
+}
+
+model ModifierGroup {
+  id           String           @id @default(cuid())
+  menuItemId   String
+  name         String
+  minSelect    Int              @default(0)
+  maxSelect    Int              @default(1)
+  isRequired   Boolean          @default(false)
+  sortOrder    Int              @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  menuItem     MenuItem         @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  options      ModifierOption[]
+
+  @@index([menuItemId])
+}
+
+model ModifierOption {
+  id               String              @id @default(cuid())
+  modifierGroupId  String
+  name             String
+  priceDeltaCents  Int                 @default(0)
+  isAvailable      Boolean             @default(true)
+  sortOrder        Int                 @default(0)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  modifierGroup    ModifierGroup       @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+  selectedOnItems  OrderItemModifier[]
+
+  @@index([modifierGroupId])
+}
+
+model Order {
+  id                 String       @id @default(cuid())
+  orderNumber        Int          @unique
+  customerName       String?
+  phone              String
+  notes              String?
+  requestedPickupAt  DateTime?
+  status             OrderStatus  @default(PENDING)
+  paymentReceived    Boolean      @default(false)
+  subtotalCents      Int
+  taxCents           Int          @default(0)
+  totalCents         Int
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  orderItems         OrderItem[]
+  printJobs          PrintJob[]
+}
+
+model ManagerAccount {
+  id                    String           @id @default(cuid())
+  username              String           @unique
+  passwordHash          String
+  failedLoginAttempts   Int              @default(0)
+  lockedUntil           DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  sessions              ManagerSession[]
+}
+
+model ManagerSession {
+  id               String         @id @default(cuid())
+  managerId        String
+  sessionTokenHash String         @unique
+  expiresAt        DateTime
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  manager          ManagerAccount @relation(fields: [managerId], references: [id], onDelete: Cascade)
+
+  @@index([managerId])
+  @@index([expiresAt])
+}
+
+model StoreSettings {
+  id                     String    @id @default(cuid())
+  estimatedPickupMinutes Int       @default(30)
+  weeklyHoursJson        String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
+
+model OrderItem {
+  id                  String              @id @default(cuid())
+  orderId             String
+  menuItemId          String
+  quantity            Int                 @default(1)
+  itemNameSnapshot    String
+  unitPriceCents      Int
+  lineTotalCents      Int
+  specialInstructions String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  order               Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem            MenuItem            @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+  modifiers           OrderItemModifier[]
+
+  @@index([orderId])
+  @@index([menuItemId])
+}
+
+model OrderItemModifier {
+  id                 String           @id @default(cuid())
+  orderItemId        String
+  modifierOptionId   String
+  optionNameSnapshot String
+  priceDeltaCents    Int              @default(0)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  orderItem          OrderItem        @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  modifierOption     ModifierOption   @relation(fields: [modifierOptionId], references: [id], onDelete: Restrict)
+
+  @@index([orderItemId])
+  @@index([modifierOptionId])
+}
+
+model PrintJob {
+  id             String          @id @default(cuid())
+  orderId        String
+  status         PrintJobStatus  @default(PENDING)
+  trigger        PrintJobTrigger
+  printerTarget  String?
+  requestedBy    String?
+  attempts       Int             @default(0)
+  lastError      String?
+  queuedAt       DateTime        @default(now())
+  processedAt    DateTime?
+  printedAt      DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  order          Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status, queuedAt])
+  @@index([trigger])
+}
