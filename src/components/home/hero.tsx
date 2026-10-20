@@ -64,7 +64,7 @@ export function Hero({ estimatedPickupMinutes }: HeroProps) {
             <li>• Next.js App Router + TypeScript</li>
             <li>• Tailwind CSS v4 setup</li>
             <li>• Prisma-backed menu and order reads</li>
-            <li>• Windows-friendly local SQLite dev database</li>
+            <li>• Windows-friendly Next.js + Prisma stack ready for Neon Postgres</li>
           </ul>
         </div>
       </div>

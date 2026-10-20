@@ -1,4 +1,4 @@
-import { OrderStatus, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import argon2 from "argon2";
 
 const prisma = new PrismaClient();
@@ -585,33 +585,6 @@ async function main() {
     });
   }
 
-  await prisma.order.create({
-    data: {
-      orderNumber: 1001,
-      customerName: "Alex",
-      phone: "555-0101",
-      status: OrderStatus.PREPARING,
-      paymentReceived: false,
-      subtotalCents: 1166,
-      taxCents: 0,
-      totalCents: 1166,
-      orderItems: {
-        create: [
-          {
-            itemNameSnapshot: "Vegetable Delight Combo",
-            quantity: 1,
-            unitPriceCents: 895,
-            lineTotalCents: 895,
-            menuItem: {
-              connect: {
-                slug: "c1-vegetable-delight-combo",
-              },
-            },
-          },
-        ],
-      },
-    },
-  });
 }
 
 main()

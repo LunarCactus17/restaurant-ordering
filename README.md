@@ -6,9 +6,9 @@ A Windows-friendly starter for building a restaurant online ordering website wit
 - React + TypeScript
 - Tailwind CSS v4
 - Prisma ORM
-- SQLite for local development
+- PostgreSQL-ready Prisma setup for Neon / production deployment
 
-This scaffold is designed to run cleanly in Visual Studio 2022 on Windows while keeping a straightforward path to a production database later.
+This scaffold is designed to run cleanly in Visual Studio 2022 on Windows while now preparing the project for a Neon Postgres production database.
 
 ## Current MVP Scaffold
 
@@ -65,15 +65,15 @@ npm install
 
 ### 4. Local database
 
-The project uses SQLite locally.
+The project is now being prepared for PostgreSQL / Neon deployment.
 
 Environment file:
 
 ```env
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://USER:PASSWORD@HOST.neon.tech/DBNAME?sslmode=require"
 ```
 
-Create/update the local database and seed it:
+Create/update the database and seed it:
 
 ```bash
 npm run db:migrate
@@ -81,7 +81,7 @@ npm run db:migrate
 
 This will:
 
-- create the SQLite database
+- connect to the configured PostgreSQL database
 - apply the migration
 - generate the Prisma client
 - run the seed script
@@ -124,7 +124,7 @@ Verified in this workspace on Windows: build succeeds.
 
 ## Notes About Prisma
 
-This scaffold intentionally uses Prisma 6.16.1 right now because it works cleanly with the traditional Prisma schema + migrate workflow used for this MVP. Prisma 8 introduced a different contract/config flow that interrupted scaffolding in this environment, so the project was stabilized on the compatible version first.
+This scaffold intentionally uses Prisma 6.16.1 right now because it works cleanly with the traditional Prisma schema + migrate workflow used for this MVP and the current Neon/Postgres migration path.
 
 That means:
 

@@ -14,7 +14,7 @@ const milestones = [
     title: "Phase 2 — Customer ordering workflow",
     timeframe: "In progress",
     tasks: [
-      "Serve the menu from Prisma-backed SQLite data",
+      "Serve the menu from Prisma-backed PostgreSQL data",
       "Support item customization, cart state, and checkout submission",
       "Create customer-facing order numbers and confirmation details",
     ],
